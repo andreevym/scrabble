@@ -17,17 +17,17 @@ public class Game {
     private Player player1;
     private Player player2;
 
-    boolean isFinished = false;
+    private boolean isFinished = false;
 
-    public Game(Player player1) {
+    Game(Player player1) {
         this.player1 = player1;
     }
 
-    public void setPlayer2(Player player2) {
+    void setPlayer2(Player player2) {
         this.player2 = player2;
     }
 
-    public void play() {
+    void play() {
         if (player1 == null || player2 == null) {
             System.out.println("Can't play without other player");
         }
@@ -44,7 +44,8 @@ public class Game {
         fillAllHands();
 
         activePlayer.set(player1);
-        player1.write("Придумай слово и добавь его на Игровое поле");
+        player1.write("Придумай первое слово и добавь его на Игровое поле");
+        player1.setFirstWord(true);
         player2.write("Первый ход у вашего противника. Ждем...");
     }
 
@@ -83,7 +84,7 @@ public class Game {
         player2.write(msg);
     }
 
-    public void getLetterCardsInHands(Collection<Character> letterCardsInHands) {
+    private void getLetterCardsInHands(Collection<Character> letterCardsInHands) {
         int size = letterCardsInHands.size();
         System.out.printf("in your hands %s letters\n", size);
 
@@ -93,7 +94,23 @@ public class Game {
             letterCardsInHands.add(letter);
         }
     }
+    public boolean firstWrite(char[] word) {
+        int startY = Gameboard.GEMEBOARD_HEIGHT / 2;
 
+        int startXHalf = Gameboard.GEMEBOARD_HEIGHT / 2;
+        Orientation orientation = Orientation.HORIZONTAL;
+
+        int wordHalf = word.length / 2;
+        int startX = startXHalf - wordHalf;
+
+        if (gameboard.write(word, startY, startX, orientation)) {
+            gameboard.printToPlayers(player1, player2);
+            return true;
+        }
+
+        System.out.println("FALSE");
+        return false;
+    }
     public boolean write(char[] word, String[] strings) {
         int startY = getIndexByString(strings[0]);
         int startX = getIndexByString(strings[1]);

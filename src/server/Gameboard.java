@@ -7,6 +7,9 @@ import server.letter.Player;
  */
 interface Gameboard {
 
+    int GEMEBOARD_HEIGHT = 16;
+    int GEMEBOARD_WIDTH = 16;
+
     /***
      * Загружаем игровое поле 15x15
      */

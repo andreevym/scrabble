@@ -3,7 +3,13 @@ package server.letter;
 import server.Game;
 import server.Manager;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +28,7 @@ public class Player implements Runnable {
     private Status status;
     private List<Character> letterCardsInHands = new ArrayList<>();
     private Game game;
+    private boolean isFirstWord = false;
 
     public Player(Socket client) {
         this.client = client;
@@ -54,7 +61,7 @@ public class Player implements Runnable {
 
                     switch (status) {
                         case NOT_READY:
-                            if (Status.READY.name().equals(inputLine)) {
+                            if (Status.READY.name().toLowerCase().equals(inputLine.toLowerCase())) {
                                 setStatus(Status.READY);
 
                                 addToReadyList();
@@ -104,8 +111,40 @@ public class Player implements Runnable {
                                             }
                                         }
                                     } else {
-                                        write("Write the word");
-                                        write("for example: 'k k vertical test'");
+                                        String word = strings[0];
+                                        if (isFirstWord && !word.isEmpty()) {
+                                            boolean allSuccessPassed = true;
+                                            char[] charsOfWord = word.toCharArray();
+
+                                            if(charsOfWord.length <= 0) {
+                                                System.out.println("can't be here");
+                                                throw new IllegalArgumentException("can't be here");
+                                            }
+                                            for (Character letter : charsOfWord) {
+                                                if (letterCardsInHands.contains(letter)) {
+                                                    write("letter '" + letter + "' success passed");
+                                                } else {
+                                                    allSuccessPassed = false;
+                                                    write("letter '" + letter + "' not found");
+                                                }
+                                            }
+                                            if(allSuccessPassed) {
+                                                if(game.firstWrite(charsOfWord)) {
+                                                    letterCardsInHands.remove(charsOfWord);
+                                                }
+                                                isFirstWord = false;
+                                                game.changeActivePlayer(this);
+                                            }
+                                        } else {
+                                            write("Write the word");
+                                            write("for example: 'x y h test'");
+                                            write("for example: 'x y v test'");
+                                            write("k - coordinate start by x");
+                                            write("k - coordinate start by y");
+                                            write("h - horizontal");
+                                            write("v - verstival");
+                                            write("test - word");
+                                        }
                                     }
                                 }
                             } else {
@@ -185,6 +224,10 @@ public class Player implements Runnable {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public void setFirstWord(boolean firstWord) {
+        isFirstWord = firstWord;
     }
 
     public enum Status {
