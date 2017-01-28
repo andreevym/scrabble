@@ -2,6 +2,7 @@ package server.letter;
 
 import server.Game;
 import server.Manager;
+import server.player.LetterEnum;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -21,18 +22,17 @@ public class Player implements Runnable {
     private final static Manager manager = new Manager();
     private final static AtomicInteger maxPassTime = new AtomicInteger();
     private Socket client;
-    private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
-    private int number;
     private String name;
     private Status status;
     private List<Character> letterCardsInHands = new ArrayList<>();
     private Game game;
     private boolean isFirstWord = false;
+    private int balance;
 
     public Player(Socket client) {
         this.client = client;
-        this.number = numberOfPlayers.incrementAndGet();
+        int number = numberOfPlayers.incrementAndGet();
         this.name = "Player" + number;
         status = Status.NOT_READY;
     }
@@ -50,7 +50,7 @@ public class Player implements Runnable {
             InputStream inputStream = client.getInputStream();
             OutputStream outputStream = client.getOutputStream();
 
-            bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "utf8"));
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "utf8"));
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
 
             write("When you will ready to play just say: 'READY'");
@@ -61,14 +61,7 @@ public class Player implements Runnable {
 
                     switch (status) {
                         case NOT_READY:
-                            if (Status.READY.name().toLowerCase().equals(inputLine.toLowerCase())) {
-                                setStatus(Status.READY);
-
-                                addToReadyList();
-                            } else {
-                                write("Please write 'READY', when you will really READY");
-                                System.out.println(name + ": " + inputLine);
-                            }
+                            noReady(inputLine);
 
                             break;
                         case READY:
@@ -76,80 +69,7 @@ public class Player implements Runnable {
 
                             break;
                         case PLAY:
-                            if (this == game.getActivePlayer()) {
-                                String[] strings = inputLine.split(" ");
-                                // command can be executed after pass
-                                if (strings[0].startsWith("finish")) {
-                                    finish();
-                                } else if (strings[0].startsWith("pass")) {
-                                    if (strings.length != 2) {
-                                        finish();
-                                    } else {
-                                        char[] passLetters = strings[1].toCharArray();
-
-                                        for (Character letter : passLetters) {
-                                            if (letterCardsInHands.contains(letter)) {
-                                                letterCardsInHands.remove(letter);
-                                                write("letter '" + letter + "' success passed");
-                                            } else {
-                                                write("letter '" + letter + "' not found");
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    if (strings.length == 4) {
-                                        char[] word = strings[3].toCharArray();
-                                        if (checkWord(word)) {
-                                            if (game.write(word, strings)) {
-                                                for (Character letter : word) {
-                                                    letterCardsInHands.remove(letter);
-                                                }
-                                                game.changeActivePlayer(this);
-                                            } else {
-                                                write("Write the word");
-                                                write("for example: 'k k vertical test'");
-                                            }
-                                        }
-                                    } else {
-                                        String word = strings[0];
-                                        if (isFirstWord && !word.isEmpty()) {
-                                            boolean allSuccessPassed = true;
-                                            char[] charsOfWord = word.toCharArray();
-
-                                            if(charsOfWord.length <= 0) {
-                                                System.out.println("can't be here");
-                                                throw new IllegalArgumentException("can't be here");
-                                            }
-                                            for (Character letter : charsOfWord) {
-                                                if (letterCardsInHands.contains(letter)) {
-                                                    write("letter '" + letter + "' success passed");
-                                                } else {
-                                                    allSuccessPassed = false;
-                                                    write("letter '" + letter + "' not found");
-                                                }
-                                            }
-                                            if(allSuccessPassed) {
-                                                if(game.firstWrite(charsOfWord)) {
-                                                    letterCardsInHands.remove(charsOfWord);
-                                                }
-                                                isFirstWord = false;
-                                                game.changeActivePlayer(this);
-                                            }
-                                        } else {
-                                            write("Write the word");
-                                            write("for example: 'x y h test'");
-                                            write("for example: 'x y v test'");
-                                            write("k - coordinate start by x");
-                                            write("k - coordinate start by y");
-                                            write("h - horizontal");
-                                            write("v - verstival");
-                                            write("test - word");
-                                        }
-                                    }
-                                }
-                            } else {
-                                write("Подождите пока другой игрок закончит свой ход");
-                            }
+                            play(inputLine);
 
                             break;
                         default:
@@ -165,6 +85,120 @@ public class Player implements Runnable {
         }
 
         System.out.println(name + " is exit");
+    }
+
+    private void noReady(String inputLine) {
+        if (Status.READY.name().toLowerCase().equals(inputLine.toLowerCase())) {
+            setStatus(Status.READY);
+
+            addToReadyList();
+        } else {
+            write("Please writeToGameboard 'READY', when you will really READY");
+            System.out.println(name + ": " + inputLine);
+        }
+    }
+
+    private void play(String inputLine) {
+        if (this == game.getActivePlayer()) {
+            String[] strings = inputLine.split(" ");
+            // command can be executed after pass
+            if (strings[0].startsWith("finish")) {
+                finish();
+            } else if (strings[0].startsWith("pass")) {
+                pass(strings);
+            } else {
+                sayWord(strings);
+            }
+        } else {
+            write("Подождите пока другой игрок закончит свой ход");
+        }
+    }
+
+    private void sayWord(String[] strings) {
+        if (strings.length == 4) {
+            char[] word = strings[3].toCharArray();
+            if (checkWord(word)) {
+                sayCommand(strings, word);
+            }
+        } else {
+            String word = strings[0];
+            if (isFirstWord && !word.isEmpty()) {
+                sayFirstWord(word);
+            } else {
+                invalidCommand();
+            }
+        }
+    }
+
+    private void invalidCommand() {
+        write("Не правильная команда. Повторите еще раз.");
+    }
+
+    private void sayFirstWord(String word) {
+        char[] charsOfWord = word.toCharArray();
+
+        if (charsOfWord.length <= 0) {
+            System.out.println("can't be here");
+            throw new IllegalArgumentException("can't be here");
+        }
+
+        if (isAllLetterInHands(charsOfWord)) {
+            if (game.firstWrite(charsOfWord)) {
+                handleLettersInHands(charsOfWord);
+                game.changeActivePlayer(this);
+                isFirstWord = false;
+            }
+        }
+    }
+
+    private boolean isAllLetterInHands(char[] charsOfWord) {
+        for (Character letter : charsOfWord) {
+            if (!letterCardsInHands.contains(letter)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void sayCommand(String[] strings, char[] word) {
+        if (game.writeToGameboard(word, strings)) {
+            handleLettersInHands(word);
+            game.changeActivePlayer(this);
+        } else {
+            invalidCommand();
+        }
+    }
+
+    private void handleLettersInHands(char[] word) {
+        for (Character letter : word) {
+            addToBalance(letter);
+            letterCardsInHands.remove(letter);
+        }
+    }
+
+    private void addToBalance(Character letter) {
+        balance += LetterEnum.valueOf(letter.toString()).getCost();
+    }
+
+    public int getBalance() {
+        return balance;
+    }
+
+    private void pass(String[] strings) {
+        if (strings.length != 2) {
+            finish();
+        } else {
+            char[] passLetters = strings[1].toCharArray();
+
+            for (Character letter : passLetters) {
+                if (letterCardsInHands.contains(letter)) {
+                    letterCardsInHands.remove(letter);
+                    write("letter '" + letter + "' success passed");
+                } else {
+                    write("letter '" + letter + "' not found");
+                }
+            }
+        }
     }
 
     private void finish() {

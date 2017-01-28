@@ -51,19 +51,31 @@ public class Game {
 
     public void changeActivePlayer(Player player) {
         if (player != player1 && activePlayer.get() != player1) {
-            changeActivePlayerFromTo(player2, player1);
+            nextStepFromTo(player2, player1);
         } else if (player != player2 && activePlayer.get() != player2) {
-            changeActivePlayerFromTo(player1, player2);
+            nextStepFromTo(player1, player2);
         } else {
             throw new IllegalArgumentException("can't find active player for Game");
         }
     }
 
-    private void changeActivePlayerFromTo(Player from, Player to) {
-        activePlayer.set(to);
+    private void setActivePlayer(Player player) {
+        this.activePlayer.set(player);
+    }
+
+    private void nextStepFromTo(Player from, Player to) {
+        setActivePlayer(to);
         fillHands(to);
+
         from.write("Ждем пока сходит соперник...");
         to.write("Теперь ваш ход.");
+
+        showBalance();
+    }
+
+    private void showBalance() {
+        player1.write("Ваш баланс: " + player1.getBalance());
+        player2.write("Ваш баланс: " + player2.getBalance());
     }
 
     private void fillAllHands() {
@@ -108,10 +120,9 @@ public class Game {
             return true;
         }
 
-        System.out.println("FALSE");
         return false;
     }
-    public boolean write(char[] word, String[] strings) {
+    public boolean writeToGameboard(char[] word, String[] strings) {
         int startY = getIndexByString(strings[0]);
         int startX = getIndexByString(strings[1]);
 
@@ -127,7 +138,6 @@ public class Game {
             return true;
         }
 
-        System.out.println("FALSE");
         return false;
     }
 

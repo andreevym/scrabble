@@ -67,6 +67,7 @@ public class GameboardImpl implements Gameboard {
         int indexWord = 0;
 
         while(indexWord < word.length) {
+            // TODO write TEST
             char c = GAMEBOARD[startY][indexGemeboard];
             System.out.println("c: " + c);
 
