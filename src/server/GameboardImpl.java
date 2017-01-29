@@ -133,7 +133,7 @@ class GameboardImpl implements Gameboard {
             char c = GAMEBOARD[startY][indexGemeboard];
             System.out.println("c: " + c);
 
-            if (c != s) {
+            if (c != s && c != word[indexWord]) {
                 // throw new IllegalArgumentException("char [ " + indexGameboard + ", " + startX + "] exists : " + GAMEBOARD[indexGameboard][startX]);
                 System.out.println("word don't exists indexGemeboard: " + indexGemeboard);
                 System.out.println("word don't exists startX: " + startY);
@@ -141,6 +141,7 @@ class GameboardImpl implements Gameboard {
                 GAMEBOARD[startY][indexGemeboard] = word[indexWord];
                 indexWord++;
             }
+
             indexGemeboard++;
         }
     }
@@ -165,7 +166,7 @@ class GameboardImpl implements Gameboard {
             char c = GAMEBOARD[indexGemeboard][startX];
             System.out.println("c: " + c);
 
-            if (c != s) {
+            if (c != s && c != word[indexWord]) {
                 // throw new IllegalArgumentException("char [ " + indexGameboard + ", " + startX + "] exists : " + GAMEBOARD[indexGameboard][startX]);
                 System.out.println("word don't exists indexGemeboard: " + indexGemeboard);
                 System.out.println("word don't exists startX: " + startX);

@@ -123,7 +123,6 @@ public class Game {
         return false;
     }
     public boolean writeToGameboard(char[] word, int startX, int startY, Orientation orientation) {
-
         if (gameboard.write(word, startY, startX, orientation)) {
             gameboard.printToPlayers(player1, player2);
             return true;
