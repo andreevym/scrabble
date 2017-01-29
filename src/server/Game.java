@@ -122,16 +122,7 @@ public class Game {
 
         return false;
     }
-    public boolean writeToGameboard(char[] word, String[] strings) {
-        int startY = getIndexByString(strings[0]);
-        int startX = getIndexByString(strings[1]);
-
-        Orientation orientation = null;
-        if (strings[2].startsWith("v")) {
-            orientation = Orientation.VERTICAL;
-        } else if (strings[2].startsWith("h")) {
-            orientation = Orientation.HORIZONTAL;
-        }
+    public boolean writeToGameboard(char[] word, int startX, int startY, Orientation orientation) {
 
         if (gameboard.write(word, startY, startX, orientation)) {
             gameboard.printToPlayers(player1, player2);
@@ -141,12 +132,6 @@ public class Game {
         return false;
     }
 
-    private int getIndexByString(String s) {
-        int charAt = s.charAt(0);
-        int a = 'a';
-        return charAt - a + 1;
-    }
-
     public Player getActivePlayer() {
         return activePlayer.get();
     }
@@ -154,6 +139,10 @@ public class Game {
     public void finish(String reason) {
         isFinished = !isFinished;
         writeAll("GAME IS FINISHED. reason " + reason);
+    }
+
+    public boolean checkReference(char[] word, int startX, int startY, Orientation orientation) {
+        return gameboard.checkReference(word, startX, startY, orientation);
     }
 }
 

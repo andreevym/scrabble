@@ -20,12 +20,10 @@ interface Gameboard {
      */
     boolean write(char[] word, int startY, int startX, Orientation orientation);
 
-    /**
-     * Игра может проверить слово
-     */
-    boolean check(char[] word);
-
     void printToPlayer(Player player);
 
     void printToPlayers(Player player1, Player player2);
+
+    boolean checkReference(char[] word, int startX, int startY, Orientation orientation);
+
 }

@@ -4,10 +4,72 @@ import server.letter.Player;
 
 import java.util.Arrays;
 
-public class GameboardImpl implements Gameboard {
+class GameboardImpl implements Gameboard {
 
-    private char[][] GAMEBOARD;
+    private static char[][] GAMEBOARD;
 
+    @Override
+    public boolean checkReference(char[] word, int startX, int startY, Orientation orientation) {
+        int length = word.length;
+
+        int endX = startX;
+        int endY = startY;
+
+        int indexX = startX;
+        int indexY = startY;
+
+        if (orientation == Orientation.HORIZONTAL) {
+            endX += length;
+        } else if (orientation == Orientation.VERTICAL) {
+            endY += length;
+        }
+
+/*        System.out.println("endX = " + endX);
+        System.out.println("endY = " + endY);
+        System.out.println("indexX = " + indexX);
+        System.out.println("indexY = " + indexY);
+
+        System.out.println("word = " + Arrays.toString(word));
+        System.out.println("length = " + length);*/
+
+        int indexWord = 0;
+        while (indexX !=  endX || indexY != endY) {
+
+/*
+            System.out.println("______________________________________________");
+            System.out.println("indexWord = " + indexWord);
+
+            System.out.println("indexX = " + indexX);
+            System.out.println("indexY = " + indexY);
+
+            System.out.println("word[indexWord] = " + word[indexWord]);
+            System.out.println("GAMEBOARD[indexX][indexY] = " + GAMEBOARD[indexY][indexX]);
+*/
+
+            if (word[indexWord] == GAMEBOARD[indexY][indexX]) {
+                return true;
+            }
+
+            if (orientation == Orientation.HORIZONTAL) {
+                indexX++;
+            } else if (orientation == Orientation.VERTICAL) {
+                indexY++;
+            }
+            indexWord++;
+        }
+        return false;
+    }
+
+    /*public static void main(String[] args) {
+        char[] word = {'a', 'b', 'c'};
+        int startX = 0;
+        int startY = 0;
+        GAMEBOARD = new char[15][15];
+        GAMEBOARD[1][0] = 'b';
+        boolean checkReference = checkReference(word, startX, startY, Orientation.HORIZONTAL);
+        System.out.println(checkReference);
+    }
+*/
     @Override
     public void init() {
         GAMEBOARD = new char[GEMEBOARD_HEIGHT][GEMEBOARD_WIDTH];
@@ -156,8 +218,4 @@ public class GameboardImpl implements Gameboard {
         System.out.println("Ошибка при записи слова");
     }
 
-    @Override
-    public boolean check(char[] word) {
-        return false;
-    }
 }

@@ -2,6 +2,7 @@ package server.letter;
 
 import server.Game;
 import server.Manager;
+import server.Orientation;
 import server.player.LetterEnum;
 
 import java.io.BufferedReader;
@@ -13,6 +14,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -98,11 +100,6 @@ public class Player implements Runnable {
         }
     }
 
-    private static class Command {
-        static final String PASS = "pass";
-        static final String FINISH = "finish";
-    }
-
     private void play(String inputLine) {
         if (this == game.getActivePlayer()) {
             String[] strings = inputLine.split(" ");
@@ -119,12 +116,44 @@ public class Player implements Runnable {
         }
     }
 
+    private int getIndexByString(String s) {
+        int charAt = s.charAt(0);
+        int a = 'a';
+        return charAt - a + 1;
+    }
+
     private void sayWord(String[] strings) {
         if (strings.length == 4) {
-            char[] word = strings[3].toCharArray();
-            if (checkWord(word)) {
-                sayCommand(strings, word);
+            int startX = getIndexByString(strings[0]);
+            int startY = getIndexByString(strings[1]);
+            Orientation orientation = Orientation.getByValue(strings[2]);
+            if (orientation == null) {
+                write("Не удалось определить тип расположения слова h/v. Повторите еще раз");
+                return;
             }
+            char[] word = strings[3].toCharArray();
+
+            System.out.println("Параметры:");
+            System.out.println("startX = " + startX);
+            System.out.println("startY = " + startY);
+            System.out.println("orientation = " + orientation);
+            System.out.println("word = " + Arrays.toString(word));
+
+            boolean isLettersExists = checkExistsLetterInHands(word);
+            if(!isLettersExists) {
+                write("Таких букв нет у вас в руках");
+                return;
+            }
+
+            boolean isReferenceExists = game.checkReference(word, startX, startY, orientation);
+            if(!isReferenceExists) {
+                write("Слово которое вы написали "
+                        + "не пересекается ни с одним словом на доске.");
+                write("Повторите еще раз.");
+                return;
+            }
+
+            sayCommand(word, startX, startY, orientation);
         } else {
             String word = strings[0];
             if (isFirstWord && !word.isEmpty()) {
@@ -165,8 +194,8 @@ public class Player implements Runnable {
         return true;
     }
 
-    private void sayCommand(String[] strings, char[] word) {
-        if (game.writeToGameboard(word, strings)) {
+    private void sayCommand(char[] word, int startX, int startY, Orientation orientation) {
+        if (game.writeToGameboard(word, startX, startY, orientation)) {
             handleLettersInHands(word);
             game.changeActivePlayer(this);
         } else {
@@ -224,17 +253,14 @@ public class Player implements Runnable {
         }
     }
 
-    private boolean checkWord(char[] word) {
-        boolean isValid = true;
-
-        for (char c : word) {
-            if (!letterCardsInHands.contains(c)) {
-                write("letter '" + c + "' dose not exists");
-                isValid = false;
+    private boolean checkExistsLetterInHands(char[] word) {
+        for (char letter : word) {
+            if (!letterCardsInHands.contains(letter)) {
+                write("letter '" + letter + "' dose not exists");
+                return false;
             }
         }
-
-        return isValid;
+        return true;
     }
 
     public void write(String msg) {
@@ -283,5 +309,10 @@ public class Player implements Runnable {
         NOT_READY,
         READY,
         PLAY;
+    }
+
+    private static class Command {
+        static final String PASS = "pass";
+        static final String FINISH = "finish";
     }
 }
