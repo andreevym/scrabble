@@ -33,7 +33,8 @@ public enum LetterEnum {
     ь('ь', 2, 3),
     э('э', 1, 8),
     ю('ю', 1, 8),
-    я('я', 2, 3);
+    я('я', 2, 3),
+    empty('*', 2, 0);
 
     private final char letter;
     private final int count;
