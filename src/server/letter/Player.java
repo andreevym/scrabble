@@ -98,13 +98,18 @@ public class Player implements Runnable {
         }
     }
 
+    private static class Command {
+        static final String PASS = "pass";
+        static final String FINISH = "finish";
+    }
+
     private void play(String inputLine) {
         if (this == game.getActivePlayer()) {
             String[] strings = inputLine.split(" ");
             // command can be executed after pass
-            if (strings[0].startsWith("finish")) {
+            if (strings[0].startsWith(Command.FINISH)) {
                 finish();
-            } else if (strings[0].startsWith("pass")) {
+            } else if (strings[0].startsWith(Command.PASS)) {
                 pass(strings);
             } else {
                 sayWord(strings);
@@ -190,13 +195,23 @@ public class Player implements Runnable {
         } else {
             char[] passLetters = strings[1].toCharArray();
 
+            boolean isAllLettersExists = true;
+
             for (Character letter : passLetters) {
-                if (letterCardsInHands.contains(letter)) {
-                    letterCardsInHands.remove(letter);
-                    write("letter '" + letter + "' success passed");
-                } else {
-                    write("letter '" + letter + "' not found");
+                if (!letterCardsInHands.contains(letter)) {
+                    isAllLettersExists = false;
+                    write("буква '" + letter + "' не найдена");
                 }
+            }
+
+            if (isAllLettersExists) {
+                for (Character letter : passLetters) {
+                    letterCardsInHands.remove(letter);
+                }
+                finish();
+            } else {
+                write("Пожалуйста попробуйте еще раз. "
+                        + "Нужно указывать только существующие буквы. Спасибо.");
             }
         }
     }

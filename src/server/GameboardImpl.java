@@ -26,11 +26,11 @@ public class GameboardImpl implements Gameboard {
             }
         }
 
-        System.out.printf("Gameboard Was init %s x %s\n", GEMEBOARD_HEIGHT, GEMEBOARD_WIDTH);
-        printToServer();
+        System.out.printf("Gameboard Was init %s x %s\n", GEMEBOARD_HEIGHT-1, GEMEBOARD_WIDTH-1);
+        printGemeboard();
     }
 
-    private void printToServer() {
+    private void printGemeboard() {
         for (int h = 0; h < GEMEBOARD_HEIGHT; h++) {
             for (int w = 0; w < GEMEBOARD_WIDTH; w++) {
                 System.out.print(GAMEBOARD[h][w]);
@@ -128,22 +128,32 @@ public class GameboardImpl implements Gameboard {
             return false;
         }
 
-        boolean result;
-        switch (orientation) {
-            case HORIZONTAL:
-                result = writeHorizontal(word, startY, startX);
-                break;
-            case VERTICAL:
-                result = writeVertical(word, startY, startX);
-                break;
-            default:
-                return false;
+        boolean result = false;
+        try {
+            switch (orientation) {
+                case HORIZONTAL:
+                    result = writeHorizontal(word, startY, startX);
+                    break;
+                case VERTICAL:
+                    result = writeVertical(word, startY, startX);
+                    break;
+                default:
+                    return false;
+            }
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
         }
 
         if (result) {
-            printToServer();
+            printGemeboard();
+        } else {
+            printError();
         }
         return result;
+    }
+
+    private void printError() {
+        System.out.println("Ошибка при записи слова");
     }
 
     @Override
