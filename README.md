@@ -47,28 +47,3 @@ https://ru.wikipedia.org/wiki/%D0%A1%D0%BA%D1%80%D1%8D%D0%B1%D0%B1%D0%BB
 ##TODO
 
 https://github.com/andreevym/scrabble/issues
-
-##Исправить баг
-Ждем пока сходит соперник...
-
-Буквы из которых вы можите составить слово:
-
-[щ, и, а, н, в, е, о]
-
-Теперь ваш ход.
-
-pass щи
-
-letter 'щ' success passed
-
-letter 'и' success passed
-  
-pass
-
-Ждем пока сходит соперник...
-
-Буквы из которых вы можите составить слово:
-
-[а, н, в, е, о, ь, э]
-
-Теперь ваш ход.
