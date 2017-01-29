@@ -88,7 +88,7 @@ public class Player implements Runnable {
     }
 
     private void noReady(String inputLine) {
-        if (Status.READY.name().toLowerCase().equals(inputLine.toLowerCase())) {
+        if (Status.READY.name().toLowerCase().contains(inputLine.toLowerCase())) {
             setStatus(Status.READY);
 
             addToReadyList();
