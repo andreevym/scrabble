@@ -11,8 +11,8 @@ public class Game {
 
     private static final int MAX_PLAYER_LETTER = 7;
 
-    private static LetterDeck letterDeckForOneGame = new LetterDeckImpl();
     private static Gameboard gameboard = new GameboardImpl();
+    private static LetterDeck letterDeckForOneGame = new LetterDeckImpl();
     private AtomicReference<Player> activePlayer = new AtomicReference<>();
     private Player player1;
     private Player player2;
@@ -29,7 +29,7 @@ public class Game {
 
     void play() {
         if (player1 == null || player2 == null) {
-            System.out.println("Can't play without other player");
+            System.out.println("Вы не можете играть без второго игрока");
         }
 
         player1.setStatus(Player.Status.PLAY);
@@ -38,13 +38,14 @@ public class Game {
         gameboard.init();
         gameboard.printToPlayers(player1, player2);
 
-        System.out.printf("New Game started: '%s' play with '%s'\n", player1.getName(), player2.getName());
-        writeAll("WELCOME TO THE GAME !!!");
+        writeAll("Добро пожаловать в игру");
+        writeAll(String.format("Новая игра между игроком '%s' и '%s'\n", player1.getName(), player2.getName()));
 
         fillAllHands();
 
         activePlayer.set(player1);
         player1.write("Придумай первое слово и добавь его на Игровое поле");
+        player1.write("Первое составленное слово будет проходить через центральную клетку.");
         player1.setFirstWord(true);
         player2.write("Первый ход у вашего противника. Ждем...");
     }
@@ -55,7 +56,7 @@ public class Game {
         } else if (player != player2 && activePlayer.get() != player2) {
             nextStepFromTo(player1, player2);
         } else {
-            throw new IllegalArgumentException("can't find active player for Game");
+            throw new IllegalArgumentException("не могу найти активного игрока для игры");
         }
     }
 
@@ -69,6 +70,14 @@ public class Game {
 
         from.write("Ждем пока сходит соперник...");
         to.write("Теперь ваш ход.");
+        to.write("Каждое новое слово должно соприкасаться или иметь общую букву (или буквы) с ранее составленными словами.");
+        to.write("Слова должны читаться слева направо (по горизонтали) и сверху вниз (по вертикали).");
+
+        to.write("Пример: i h v тест");
+        to.write("i - начальная координата по горизонтали");
+        to.write("h - начальная координата по вертикали");
+        to.write("v - расположение слов по вертикали");
+        to.write("тест - слово");
 
         showBalance();
     }
@@ -79,14 +88,17 @@ public class Game {
     }
 
     private void fillAllHands() {
-        writeAll("fill hands");
+        writeAll("Получить карточки с буквами");
 
         fillHands(player1);
         fillHands(player2);
     }
 
     private void fillHands(Player player) {
-        player.write("Буквы из которых вы можите составить слово:");
+        player.write("Буквы, из которых вы можете составить слово:");
+        // добавить описание,
+        // ограничить время
+        // не выводить игроку 2
         getLetterCardsInHands(player.getLetterCardsInHands());
         player.write(player.getLetterCardsInHands().toString());
     }
@@ -98,13 +110,14 @@ public class Game {
 
     private void getLetterCardsInHands(Collection<Character> letterCardsInHands) {
         int size = letterCardsInHands.size();
-        System.out.printf("in your hands %s letters\n", size);
+        System.out.printf("Колличество карточек с буквами в ваших руках %s\n", size);
 
         for (int i = size; i < MAX_PLAYER_LETTER; i++) {
             Character letter = letterDeckForOneGame.poll();
-            System.out.printf("you are get new letter: %s\n", letter);
+            System.out.printf("Вы получили новые буквы: %s\n", letter);
             letterCardsInHands.add(letter);
         }
+        System.out.printf("Колличество карточек с буквами в ваших руках после раздачи карточке %s\n", size);
     }
     public boolean firstWrite(char[] word) {
         int startY = Gameboard.GEMEBOARD_HEIGHT / 2;
@@ -137,16 +150,15 @@ public class Game {
 
     public void finish(String reason) {
         isFinished = !isFinished;
-        writeAll("GAME IS FINISHED. reason " + reason);
+        writeAll("Игра завершена. Причина " + reason);
     }
 
-    public boolean checkReference(char[] word, int startX, int startY, Orientation orientation) {
-        return gameboard.checkReference(word, startX, startY, orientation);
+    public Integer checkAndGetIndexReferenceLetter(char[] word, int startX, int startY, Orientation orientation) {
+        System.out.println("Идет проверка правила:");
+        System.out.println("Каждое новое слово должно соприкасаться или иметь общую букву (или буквы) с ранее составленными словами.");
+        return gameboard.checkAndGetIndexReferenceLetter(word, startX, startY, orientation);
     }
 }
 
-// Слова должны читаться слева направо (по горизонтали) и сверху вниз (по вертикали).
-// За один ход можно составить несколько слов.
-// Каждое новое слово должно соприкасаться или иметь общую букву (или буквы) с ранее составленными словами.
-// правило количество гласных и согласных
-// Первое составленное слово должно проходить через центральную клетку.
+// TODO За один ход можно составить несколько слов.
+// TODO правило количество гласных и согласных

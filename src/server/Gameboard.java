@@ -24,6 +24,6 @@ interface Gameboard {
 
     void printToPlayers(Player player1, Player player2);
 
-    boolean checkReference(char[] word, int startX, int startY, Orientation orientation);
+    Integer checkAndGetIndexReferenceLetter(char[] word, int startX, int startY, Orientation orientation);
 
 }

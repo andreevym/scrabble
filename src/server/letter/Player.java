@@ -18,11 +18,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static server.letter.Player.Status.NOT_READY;
+import static server.letter.Player.Status.READY;
+
 public class Player implements Runnable {
 
     private final static AtomicInteger numberOfPlayers = new AtomicInteger();
     private final static Manager manager = new Manager();
     private final static AtomicInteger maxPassTime = new AtomicInteger();
+    private final String msg = "Когда вы будите готовы к игре введите: 'r' или 'ready'";
     private Socket client;
     private BufferedWriter bufferedWriter;
     private String name;
@@ -36,17 +40,17 @@ public class Player implements Runnable {
         this.client = client;
         int number = numberOfPlayers.incrementAndGet();
         this.name = "Player" + number;
-        status = Status.NOT_READY;
+        status = NOT_READY;
     }
 
     private void addToReadyList() {
-        System.out.println(name + ": was added to ready list");
+        System.out.printf("%s: был добавлен в список игроков готовых играть\n", name);
 
         manager.startGame(this);
     }
 
     public void run() {
-        System.out.printf("Player '%s' connected\n", name);
+        System.out.printf("К нам присоединился игрок '%s'\n", name);
 
         try {
             InputStream inputStream = client.getInputStream();
@@ -55,7 +59,7 @@ public class Player implements Runnable {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "utf8"));
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
 
-            write("When you will ready to play just say: 'READY'");
+            write(msg);
 
             String inputLine;
             while ((inputLine = bufferedReader.readLine()) != null) {
@@ -67,7 +71,7 @@ public class Player implements Runnable {
 
                             break;
                         case READY:
-                            write("Please wait player2");
+                            write("Пожалуйста подождите игрока 2");
 
                             break;
                         case PLAY:
@@ -75,29 +79,32 @@ public class Player implements Runnable {
 
                             break;
                         default:
-                            write("ERROR!!!");
-                            throw new IllegalArgumentException("Your status not recognize!");
+                            write("Возникла техническая ошибка.");
+                            throw new IllegalArgumentException(String.format("Статус игрока %s не может быть распознан!", name));
                     }
                 }
             }
         } catch (IOException e) {
-            System.err.println("error: " + e.getMessage());
-            System.out.println(name + " have error");
+            System.err.println("Ошибка: " + e.getMessage());
+            System.out.printf("У игрока %s возникла ошибка\n", name);
             System.exit(-1);
         }
 
-        System.out.println(name + " is exit");
+        System.out.println(name + " уже существует");
     }
 
     private void noReady(String inputLine) {
-        if (Status.READY.name().toLowerCase().contains(inputLine.toLowerCase())) {
-            setStatus(Status.READY);
-
+        System.out.println(name + ": " + inputLine);
+        if (isReady(inputLine)) {
+            setStatus(READY);
             addToReadyList();
         } else {
-            write("Please writeToGameboard 'READY', when you will really READY");
-            System.out.println(name + ": " + inputLine);
+            write(msg);
         }
+    }
+
+    private boolean isReady(String inputLine) {
+        return READY.name().toLowerCase().contains(inputLine.toLowerCase());
     }
 
     private void play(String inputLine) {
@@ -124,36 +131,7 @@ public class Player implements Runnable {
 
     private void sayWord(String[] strings) {
         if (strings.length == 4) {
-            int startX = getIndexByString(strings[0]);
-            int startY = getIndexByString(strings[1]);
-            Orientation orientation = Orientation.getByValue(strings[2]);
-            if (orientation == null) {
-                write("Не удалось определить тип расположения слова h/v. Повторите еще раз");
-                return;
-            }
-            char[] word = strings[3].toCharArray();
-
-            System.out.println("Параметры:");
-            System.out.println("startX = " + startX);
-            System.out.println("startY = " + startY);
-            System.out.println("orientation = " + orientation);
-            System.out.println("word = " + Arrays.toString(word));
-
-            boolean isLettersExists = checkExistsLetterInHands(word);
-            if(!isLettersExists) {
-                write("Таких букв нет у вас в руках");
-                return;
-            }
-
-            boolean isReferenceExists = game.checkReference(word, startX, startY, orientation);
-            if(!isReferenceExists) {
-                write("Слово которое вы написали "
-                        + "не пересекается ни с одним словом на доске.");
-                write("Повторите еще раз.");
-                return;
-            }
-
-            sayCommand(word, startX, startY, orientation);
+            sayWord(strings[3].toCharArray(), getIndexByString(strings[0]), getIndexByString(strings[1]), Orientation.getByValue(strings[2]));
         } else {
             String word = strings[0];
             if (isFirstWord && !word.isEmpty()) {
@@ -164,6 +142,54 @@ public class Player implements Runnable {
         }
     }
 
+    private void sayWord(char[] word, int startX, int startY, Orientation orientation) {
+        if(isChecked(word, startX, startY, orientation)) {
+            sayCommand(word, startX, startY, orientation);
+        }
+
+    }
+
+    private boolean isChecked(char[] word, int startX, int startY, Orientation orientation)  {
+        System.out.println("Идет проверка..");
+        if(isCheckedParameters(word, startX, startY, orientation)) {
+            return false;
+        }
+
+        final Integer indexReferenceLetter = game.checkAndGetIndexReferenceLetter(word, startX, startY, orientation);
+        if(indexReferenceLetter == null) {
+            write("Слово которое вы написали не пересекается ни с одним словом на доске.");
+            write("Повторите еще раз.");
+            write("Пример: i h v тест");
+            write("i - начальная координата по горизонтали");
+            write("h - начальная координата по вертикали");
+            write("v - расположение слов по вертикали");
+            write("тест - слово");
+            return false;
+        }
+
+        if(!checkExistsLetterInHands(word, indexReferenceLetter)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isCheckedParameters(char[] word, int startX, int startY, Orientation orientation) {
+        System.out.println("Проверяем параметры");
+        System.out.println("Параметры:");
+        System.out.println("startX = " + startX);
+        System.out.println("startY = " + startY);
+        System.out.println("orientation = " + orientation);
+        System.out.println("слово = " + Arrays.toString(word));
+
+        if (orientation == null) {
+            write("Не удалось определить тип расположения слова h/v. Повторите еще раз");
+            return false;
+        }
+
+        return false;
+    }
+
     private void invalidCommand() {
         write("Не правильная команда. Повторите еще раз.");
     }
@@ -172,8 +198,8 @@ public class Player implements Runnable {
         char[] charsOfWord = word.toCharArray();
 
         if (charsOfWord.length <= 0) {
-            System.out.println("can't be here");
-            throw new IllegalArgumentException("can't be here");
+            System.out.println("Не может быть здесь");
+            throw new IllegalArgumentException("Не может быть здесь");
         }
 
         if (isAllLetterInHands(charsOfWord)) {
@@ -253,10 +279,31 @@ public class Player implements Runnable {
         }
     }
 
-    private boolean checkExistsLetterInHands(char[] word) {
-        for (char letter : word) {
+    /*public static void main(String[] args) {
+        for (int i = 0; i < 5; i++) {
+            System.out.println("i = " + i);
+            if(i == 2) {
+                System.out.println("i is 2");
+                continue;
+            }
+            System.out.println("other check i : " + i);
+        }
+    }*/
+
+    private boolean checkExistsLetterInHands(char[] word, Integer indexReferenceLetter) {
+        System.out.println("checkExistsLetterInHands");
+
+        for (int i = 0; i < word.length; i++) {
+            System.out.println("i = " + i);
+
+            if(i == indexReferenceLetter) {
+                // т.к эта буква есть на игровом поле, здесь проверка не нужна
+                continue;
+            }
+            char letter = word[i];
             if (!letterCardsInHands.contains(letter)) {
-                write("letter '" + letter + "' dose not exists");
+                System.out.printf("У вас нет на руках буквы %s\n'", letter);
+                write(String.format("У вас нет на руках буквы %s\n'", letter));
                 return false;
             }
         }

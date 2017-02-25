@@ -32,7 +32,7 @@ public class Application {
                 Thread thread = new Thread(player);
                 thread.start();
             } catch (IOException e) {
-                System.out.println("Accept failed: " + e.getMessage());
+                System.out.println("Не удалось принять нового игрока. Ошибка: " + e.getMessage());
                 System.exit(-1);
             }
         }
@@ -45,6 +45,8 @@ public class Application {
             System.out.println("Сервер не может быть поднят на этом порту");
             System.exit(-1);
         }
+        System.out.printf("сервер запущен на порту %s\n", DEFAULT_PORT);
+        System.out.printf("для соединения в терминале напишите: nc localhost %s\n", DEFAULT_PORT);
     }
 
     protected void finalize() {
@@ -53,7 +55,7 @@ public class Application {
         try {
             server.close();
         } catch (IOException e) {
-            System.out.println("Could not close socket");
+            System.out.println("Не удалось закрыть Socket");
             System.exit(-1);
         }
     }

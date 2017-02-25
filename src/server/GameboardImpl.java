@@ -9,7 +9,7 @@ class GameboardImpl implements Gameboard {
     private static char[][] GAMEBOARD;
 
     @Override
-    public boolean checkReference(char[] word, int startX, int startY, Orientation orientation) {
+    public Integer checkAndGetIndexReferenceLetter(char[] word, int startX, int startY, Orientation orientation) {
         int length = word.length;
 
         int endX = startX;
@@ -24,18 +24,20 @@ class GameboardImpl implements Gameboard {
             endY += length;
         }
 
-/*        System.out.println("endX = " + endX);
-        System.out.println("endY = " + endY);
-        System.out.println("indexX = " + indexX);
-        System.out.println("indexY = " + indexY);
+        /*
+            System.out.println("endX = " + endX);
+            System.out.println("endY = " + endY);
+            System.out.println("indexX = " + indexX);
+            System.out.println("indexY = " + indexY);
 
-        System.out.println("word = " + Arrays.toString(word));
-        System.out.println("length = " + length);*/
+            System.out.println("word = " + Arrays.toString(word));
+            System.out.println("length = " + length);
+        */
 
         int indexWord = 0;
         while (indexX !=  endX || indexY != endY) {
 
-/*
+        /*
             System.out.println("______________________________________________");
             System.out.println("indexWord = " + indexWord);
 
@@ -44,10 +46,11 @@ class GameboardImpl implements Gameboard {
 
             System.out.println("word[indexWord] = " + word[indexWord]);
             System.out.println("GAMEBOARD[indexX][indexY] = " + GAMEBOARD[indexY][indexX]);
-*/
+        */
 
-            if (word[indexWord] == GAMEBOARD[indexY][indexX]) {
-                return true;
+            final char letterOnGameboard = GAMEBOARD[indexY][indexX];
+            if (word[indexWord] == letterOnGameboard) {
+                return indexWord;
             }
 
             if (orientation == Orientation.HORIZONTAL) {
@@ -57,17 +60,18 @@ class GameboardImpl implements Gameboard {
             }
             indexWord++;
         }
-        return false;
+        return null;
     }
 
+    // TODO TEST
     /*public static void main(String[] args) {
         char[] word = {'a', 'b', 'c'};
         int startX = 0;
         int startY = 0;
         GAMEBOARD = new char[15][15];
         GAMEBOARD[1][0] = 'b';
-        boolean checkReference = checkReference(word, startX, startY, Orientation.HORIZONTAL);
-        System.out.println(checkReference);
+        boolean checkAndGetIndexReferenceLetter = checkAndGetIndexReferenceLetter(word, startX, startY, Orientation.HORIZONTAL);
+        System.out.println(checkAndGetIndexReferenceLetter);
     }
 */
     @Override
@@ -133,14 +137,8 @@ class GameboardImpl implements Gameboard {
             char c = GAMEBOARD[startY][indexGemeboard];
             System.out.println("c: " + c);
 
-            if (c != s && c != word[indexWord]) {
-                // throw new IllegalArgumentException("char [ " + indexGameboard + ", " + startX + "] exists : " + GAMEBOARD[indexGameboard][startX]);
-                System.out.println("word don't exists indexGemeboard: " + indexGemeboard);
-                System.out.println("word don't exists startX: " + startY);
-            } else {
-                GAMEBOARD[startY][indexGemeboard] = word[indexWord];
-                indexWord++;
-            }
+            GAMEBOARD[startY][indexGemeboard] = word[indexWord];
+            indexWord++;
 
             indexGemeboard++;
         }
@@ -156,8 +154,6 @@ class GameboardImpl implements Gameboard {
         return true;
     }
 
-    private char s = '-';
-
     private void forWriteWord2(char[] word, int startY, int startX) {
         int indexGemeboard = startY;
         int indexWord = 0;
@@ -166,14 +162,9 @@ class GameboardImpl implements Gameboard {
             char c = GAMEBOARD[indexGemeboard][startX];
             System.out.println("c: " + c);
 
-            if (c != s && c != word[indexWord]) {
-                // throw new IllegalArgumentException("char [ " + indexGameboard + ", " + startX + "] exists : " + GAMEBOARD[indexGameboard][startX]);
-                System.out.println("word don't exists indexGemeboard: " + indexGemeboard);
-                System.out.println("word don't exists startX: " + startX);
-            } else {
-                GAMEBOARD[indexGemeboard][startX] = word[indexWord];
-                indexWord++;
-            }
+            GAMEBOARD[indexGemeboard][startX] = word[indexWord];
+            indexWord++;
+
             indexGemeboard++;
         }
     }
