@@ -49,7 +49,9 @@ class GameboardImpl implements Gameboard {
         */
 
             final char letterOnGameboard = GAMEBOARD[indexY][indexX];
-            if (word[indexWord] == letterOnGameboard) {
+            if (GAMEBOARD[indexY][indexX] != '-' &&
+                    (word[indexWord] == letterOnGameboard ||
+                            GAMEBOARD[indexY][indexX] == '*' || word[indexWord] == '*')) {
                 return indexWord;
             }
 
@@ -77,6 +79,8 @@ class GameboardImpl implements Gameboard {
     @Override
     public void init() {
         GAMEBOARD = new char[GEMEBOARD_HEIGHT][GEMEBOARD_WIDTH];
+
+        GAMEBOARD[0][0] = ' ';
 
         for (int i = 1; i < GEMEBOARD_HEIGHT; i++) {
             GAMEBOARD[0][i] = (char) ('a' - 1 + i);
