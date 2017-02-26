@@ -38,8 +38,12 @@ public class Game {
         gameboard.init();
         gameboard.printToPlayers(player1, player2);
 
-        writeAll("Добро пожаловать в игру");
-        writeAll(String.format("Новая игра между игроком '%s' и '%s'\n", player1.getName(), player2.getName()));
+        writeAll("Добро пожаловать в игру!");
+
+        System.out.printf("Новая игра между игроком '%s' и '%s'\n", player1.getName(), player2.getName());
+
+        player1.write(String.format("Вы играете против игрока '%s'\n", player2.getName()));
+        player2.write(String.format("Вы играете против игрока '%s'\n", player1.getName()));
 
         fillAllHands();
 
@@ -88,7 +92,7 @@ public class Game {
     }
 
     private void fillAllHands() {
-        writeAll("Получить карточки с буквами");
+        //writeAll("Получить карточки с буквами");
 
         fillHands(player1);
         fillHands(player2);
