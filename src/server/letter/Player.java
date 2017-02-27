@@ -98,6 +98,7 @@ public class Player implements Runnable {
         if (isReady(inputLine)) {
             setStatus(READY);
             addToReadyList();
+            write("Пожалуйста подождите...");
         } else {
             write(msg);
         }
